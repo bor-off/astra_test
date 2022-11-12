@@ -1,0 +1,106 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  #vars:
+  #  container_count: 2
+  #  default_container_name: docker
+   # default_container_image: ubuntu
+  #  default_container_command: sleep 1
+
+  tasks:
+
+  #  - name: unpacking node exporter
+  #    unarchive: 
+  #        src: "https://github.com/prometheus/node_exporter/releases/download/v1.4.0/node_exporter-1.4.0.linux-amd64.tar.gz"
+  #        dest: /tmp/
+  #        remote_src: yes
+  #        creates: /tmp/node_exporter-1.4.0.linux-amd64.tar.gz
+  #- name: create node_exporter directories
+  #  file: 
+  #      path: "/etc/node_exporter"
+  #      state: directory
+
+  #- name: copy node_exporter - проблемы с правами. не запускается файл после копирования permission denied
+  #  copy:
+  #      src: /tmp/node_exporter-1.4.0.linux-amd64/node_exporter
+  #      dest: /etc/node_exporter/
+  #      remote_src: yes
+  #      mode: 0644
+  #      owner: root
+  #      group: root
+    - name: Install required system packages
+      apt: 
+         name: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools'] 
+         state: present
+         update_cache: true
+
+    - name: add docker gpg apt key
+      apt_key:
+         url: https://download.docker.com/linux/ubuntu/gpg
+         state: present
+
+    - name: add docker repository
+      apt_repository:
+         repo: deb https://download.docker.com/linux/ubuntu focal stable
+         state: present
+
+    - name: update apt and install docker-ce
+      apt:
+         name: docker-ce
+         state: latest
+         update_cache: true
+
+    - name: install docker module for python
+      pip:
+         name: docker
+
+   # - name: Pull default docker image
+   #   docker_image:
+   #      name: "{{ default_container_image }}"
+   #      source: pull
+
+   # - name: Create default containers
+   #   docker_container:
+   #      name: "{{ default_container_name }}{{ item }}"
+   #      image: "{{ default_container_image }}"
+   #      command: "{{ default_container_command }}"
+   #      state: present
+   #   with_sequence: count={{ container_count }}
+
+    - name: install docker-compose
+      get_url:
+          url: https://github.com/docker/compose/releases/download/v2.12.2/docker-compose-linux-x86_64
+          dest: /usr/bin/docker-compose
+          mode: 'u+x,g+x'
+          force: yes
+
+    - name: start up docker-compose
+      shell: "chmod +x /usr/bin/docker-compose"
+   # копируем два файла yml для node_exporter и prometheus
+
+    - name: mkdir prometheus
+      file:
+          path=/opt/prometheus_stack/prometheus
+          state=directory
+
+    - name: copy prometheus.yml
+      copy:
+        src: /home/bor-off/Astra/05. project 5/prometheus.yml
+        dest: /opt/prometheus_stack/prometheus
+        remote_src: no
+        mode: 0644
+        owner: root
+        group: root
+
+    - name: copy docker-compose.yml
+      copy:
+        src: /home/bor-off/Astra/05. project 5/docker-compose.yml
+        dest: /opt/prometheus_stack/
+        remote_src: no
+        mode: 0644
+        owner: root
+        group: root
+   # запускаем контейнеры
+    - name: docker-compose up -d
+      shell: "cd /opt/prometheus_stack/ && docker-compose up -d"

@@ -48,7 +48,7 @@
 
     - name: copy prometheus.yml
       copy:
-        src: /home/bor-off/Astra/05. project 5/prometheus.yml
+        src: ./prometheus.yml
         dest: /opt/prometheus_stack/prometheus
         remote_src: no
         mode: 0644
@@ -57,7 +57,7 @@
 
     - name: copy docker-compose.yml
       copy:
-        src: /home/bor-off/Astra/05. project 5/docker-compose.yml
+        src: ./docker-compose.yml
         dest: /opt/prometheus_stack/
         remote_src: no
         mode: 0644

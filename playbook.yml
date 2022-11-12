@@ -66,3 +66,15 @@
 
     - name: docker-compose up -d
       shell: "cd /opt/prometheus_stack/ && docker-compose up -d"
+
+    - name: copy grafana settings
+      copy:
+        src: ./grafana.db
+        dest: /opt/prometheus_stack/grafana
+        remote_src: no
+        mode: 0644
+        owner: root
+        group: root
+
+    - name: docker-compose restart
+      shell: "cd /opt/prometheus_stack/ && docker-compose stop && docker-compose up -d"
